@@ -1,3 +1,6 @@
+//go:build !handlers_test
+// +build !handlers_test
+
 package repository
 
 import (

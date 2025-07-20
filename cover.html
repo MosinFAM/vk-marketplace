@@ -1,0 +1,480 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>auth: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/MosinFAM/vk-marketplace/internal/auth/jwt.go (21.4%)</option>
+				
+				<option value="file1">github.com/MosinFAM/vk-marketplace/internal/handlers/handlers.go (100.0%)</option>
+				
+				<option value="file2">github.com/MosinFAM/vk-marketplace/internal/repository/repo_mock.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package auth
+
+import (
+        "os"
+        "time"
+
+        "github.com/golang-jwt/jwt/v5"
+)
+
+var secret = []byte(os.Getenv("JWT_SECRET"))
+
+func GenerateToken(userID string) (string, error) <span class="cov8" title="1">{
+        claims := jwt.MapClaims{
+                "user_id": userID,
+                "exp":     time.Now().Add(24 * time.Hour).Unix(),
+        }
+        t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+        return t.SignedString(secret)
+}</span>
+
+func ParseToken(tokenStr string) (string, error) <span class="cov0" title="0">{
+        t, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                return secret, nil
+        }</span>)
+        <span class="cov0" title="0">if err != nil || !t.Valid </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov0" title="0">claims, ok := t.Claims.(jwt.MapClaims)
+        if !ok </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov0" title="0">uid, ok := claims["user_id"].(string)
+        if !ok </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov0" title="0">return uid, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strconv"
+
+        "github.com/MosinFAM/vk-marketplace/internal/auth"
+        "github.com/MosinFAM/vk-marketplace/internal/models"
+        "github.com/MosinFAM/vk-marketplace/internal/repository"
+        "github.com/gin-gonic/gin"
+        "golang.org/x/crypto/bcrypt"
+)
+
+type Handler struct {
+        Repo repository.Repository
+}
+
+func validateCredentials(username, password string) bool <span class="cov8" title="1">{
+        return len(username) &gt;= 3 &amp;&amp; len(username) &lt;= 30 &amp;&amp; len(password) &gt;= 6 &amp;&amp; len(password) &lt;= 100
+}</span>
+
+func validateAd(ad models.Ad) bool <span class="cov8" title="1">{
+        return len(ad.Title) &gt; 0 &amp;&amp; len(ad.Title) &lt;= 100 &amp;&amp;
+                len(ad.Description) &lt;= 1000 &amp;&amp;
+                len(ad.ImageURL) &lt;= 300 &amp;&amp;
+                ad.Price &gt; 0
+}</span>
+
+// ======= AUTH =======
+
+// Register godoc
+// @Summary Register a new user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body models.AuthRequest true "username and password"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Router /register [post]
+func (h *Handler) Register(c *gin.Context) <span class="cov8" title="1">{
+        var req models.AuthRequest
+        if err := c.ShouldBindJSON(&amp;req); err != nil || !validateCredentials(req.Username, req.Password) </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid username or password format"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+        id, err := h.Repo.RegisterUser(req.Username, string(hash))
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Registration failed"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">token, _ := auth.GenerateToken(id)
+        c.JSON(http.StatusOK, gin.H{
+                "token": token,
+                "user": gin.H{
+                        "id":       id,
+                        "username": req.Username,
+                },
+        })</span>
+}
+
+// Login godoc
+// @Summary Login user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body models.AuthRequest true "username and password"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
+// @Router /login [post]
+func (h *Handler) Login(c *gin.Context) <span class="cov8" title="1">{
+        var req models.AuthRequest
+        if err := c.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">user, err := h.Repo.GetUserByUsername(req.Username)
+        if err != nil || user == nil || bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)) != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect credentials"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">token, _ := auth.GenerateToken(user.ID)
+        c.JSON(http.StatusOK, gin.H{
+                "token": token,
+                "user": gin.H{
+                        "id":       user.ID,
+                        "username": user.Username,
+                },
+        })</span>
+}
+
+// ======= ADS =======
+
+// CreateAd godoc
+// @Summary Create a new ad
+// @Tags ads
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body models.Ad true "ad object"
+// @Success 200 {object} models.Ad
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Router /ads [post]
+func (h *Handler) CreateAd(c *gin.Context) <span class="cov8" title="1">{
+        userID := c.GetString("user_id")
+        if userID == "" </span><span class="cov8" title="1">{
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">var ad models.Ad
+        if err := c.ShouldBindJSON(&amp;ad); err != nil || !validateAd(ad) </span><span class="cov8" title="1">{
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ad"})
+                return
+        }</span>
+        <span class="cov8" title="1">ad.UserID = userID
+
+        created, err := h.Repo.CreateAd(ad)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create ad"})
+                return
+        }</span>
+        <span class="cov8" title="1">c.JSON(http.StatusOK, created)</span>
+}
+
+// ListAds godoc
+// @Summary Get list of ads with filters &amp; pagination
+// @Tags ads
+// @Security ApiKeyAuth
+// @Produce json
+// @Param sort_by query string false "Sort by field: created_at or price"
+// @Param sort_order query string false "asc or desc"
+// @Param min_price query number false "Min price"
+// @Param max_price query number false "Max price"
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
+// @Success 200 {array} models.Ad
+// @Failure 500 {object} models.ErrorResponse
+// @Router /ads [get]
+func (h *Handler) ListAds(c *gin.Context) <span class="cov8" title="1">{
+        var f repository.AdsFilter
+
+        if s := c.Query("sort_by"); s != "" </span><span class="cov8" title="1">{
+                f.SortBy = s
+        }</span>
+        <span class="cov8" title="1">if s := c.Query("sort_order"); s != "" </span><span class="cov8" title="1">{
+                f.SortOrder = s
+        }</span>
+        <span class="cov8" title="1">if min := c.Query("min_price"); min != "" </span><span class="cov8" title="1">{
+                if val, err := strconv.ParseFloat(min, 64); err == nil </span><span class="cov8" title="1">{
+                        f.MinPrice = &amp;val
+                }</span>
+        }
+        <span class="cov8" title="1">if max := c.Query("max_price"); max != "" </span><span class="cov8" title="1">{
+                if val, err := strconv.ParseFloat(max, 64); err == nil </span><span class="cov8" title="1">{
+                        f.MaxPrice = &amp;val
+                }</span>
+        }
+        <span class="cov8" title="1">if limit := c.DefaultQuery("limit", "10"); limit != "" </span><span class="cov8" title="1">{
+                f.Limit, _ = strconv.Atoi(limit)
+        }</span>
+        <span class="cov8" title="1">if offset := c.DefaultQuery("offset", "0"); offset != "" </span><span class="cov8" title="1">{
+                f.Offset, _ = strconv.Atoi(offset)
+        }</span>
+
+        <span class="cov8" title="1">if uid, ok := c.Get("user_id"); ok </span><span class="cov8" title="1">{
+                id := uid.(string)
+                f.UserID = &amp;id
+        }</span>
+
+        <span class="cov8" title="1">ads, err := h.Repo.ListAds(f)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, ads)</span>
+}
+
+// GetAdByID godoc
+// @Summary Get a single ad by ID
+// @Tags ads
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path string true "Ad ID"
+// @Success 200 {object} models.Ad
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Router /ads/{id} [get]
+func (h *Handler) GetAdByID(c *gin.Context) <span class="cov8" title="1">{
+        id := c.Param("id")
+        ad, err := h.Repo.GetAdByID(id)
+        if err != nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+                return
+        }</span>
+        <span class="cov8" title="1">if ad == nil </span><span class="cov8" title="1">{
+                c.JSON(http.StatusNotFound, gin.H{"error": "Ad not found"})
+                return
+        }</span>
+
+        <span class="cov8" title="1">userID := c.GetString("user_id")
+        if userID != "" &amp;&amp; userID == ad.UserID </span><span class="cov8" title="1">{
+                ad.IsOwner = true
+        }</span>
+
+        <span class="cov8" title="1">c.JSON(http.StatusOK, ad)</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">// Code generated by MockGen. DO NOT EDIT.
+// Source: repository.go
+//
+// Generated by this command:
+//
+//        mockgen -source=repository.go -destination=repo_mock.go -package=repository Repository
+//
+
+// Package repository is a generated GoMock package.
+package repository
+
+import (
+        reflect "reflect"
+
+        models "github.com/MosinFAM/vk-marketplace/internal/models"
+        gomock "go.uber.org/mock/gomock"
+)
+
+// MockRepository is a mock of Repository interface.
+type MockRepository struct {
+        ctrl     *gomock.Controller
+        recorder *MockRepositoryMockRecorder
+        isgomock struct{}
+}
+
+// MockRepositoryMockRecorder is the mock recorder for MockRepository.
+type MockRepositoryMockRecorder struct {
+        mock *MockRepository
+}
+
+// NewMockRepository creates a new mock instance.
+func NewMockRepository(ctrl *gomock.Controller) *MockRepository <span class="cov8" title="1">{
+        mock := &amp;MockRepository{ctrl: ctrl}
+        mock.recorder = &amp;MockRepositoryMockRecorder{mock}
+        return mock
+}</span>
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder <span class="cov8" title="1">{
+        return m.recorder
+}</span>
+
+// CreateAd mocks base method.
+func (m *MockRepository) CreateAd(ad models.Ad) (models.Ad, error) <span class="cov8" title="1">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "CreateAd", ad)
+        ret0, _ := ret[0].(models.Ad)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// CreateAd indicates an expected call of CreateAd.
+func (mr *MockRepositoryMockRecorder) CreateAd(ad any) *gomock.Call <span class="cov8" title="1">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAd", reflect.TypeOf((*MockRepository)(nil).CreateAd), ad)
+}</span>
+
+// GetAdByID mocks base method.
+func (m *MockRepository) GetAdByID(id string) (*models.Ad, error) <span class="cov8" title="1">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetAdByID", id)
+        ret0, _ := ret[0].(*models.Ad)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetAdByID indicates an expected call of GetAdByID.
+func (mr *MockRepositoryMockRecorder) GetAdByID(id any) *gomock.Call <span class="cov8" title="1">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdByID", reflect.TypeOf((*MockRepository)(nil).GetAdByID), id)
+}</span>
+
+// GetUserByUsername mocks base method.
+func (m *MockRepository) GetUserByUsername(username string) (*models.User, error) <span class="cov8" title="1">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetUserByUsername", username)
+        ret0, _ := ret[0].(*models.User)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetUserByUsername indicates an expected call of GetUserByUsername.
+func (mr *MockRepositoryMockRecorder) GetUserByUsername(username any) *gomock.Call <span class="cov8" title="1">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUsername", reflect.TypeOf((*MockRepository)(nil).GetUserByUsername), username)
+}</span>
+
+// ListAds mocks base method.
+func (m *MockRepository) ListAds(filter AdsFilter) ([]models.Ad, error) <span class="cov8" title="1">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListAds", filter)
+        ret0, _ := ret[0].([]models.Ad)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListAds indicates an expected call of ListAds.
+func (mr *MockRepositoryMockRecorder) ListAds(filter any) *gomock.Call <span class="cov8" title="1">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAds", reflect.TypeOf((*MockRepository)(nil).ListAds), filter)
+}</span>
+
+// RegisterUser mocks base method.
+func (m *MockRepository) RegisterUser(username, passwordHash string) (string, error) <span class="cov8" title="1">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "RegisterUser", username, passwordHash)
+        ret0, _ := ret[0].(string)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockRepositoryMockRecorder) RegisterUser(username, passwordHash any) *gomock.Call <span class="cov8" title="1">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockRepository)(nil).RegisterUser), username, passwordHash)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
