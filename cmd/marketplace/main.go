@@ -50,5 +50,7 @@ func main() {
 	}
 
 	log.Println("Listening on :8080")
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		os.Exit(1)
+	}
 }

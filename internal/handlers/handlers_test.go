@@ -38,15 +38,6 @@ func getTestContextWithUser(method, path string, body []byte, userID string) (*g
 	return c, w
 }
 
-// helper для удобного сравнения JSON тела ответа с объектом
-func assertResponseJSON(t *testing.T, w *httptest.ResponseRecorder, expected interface{}) {
-	t.Helper()
-	var actual interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &actual)
-	assert.NoError(t, err)
-	assert.Equal(t, expected, actual)
-}
-
 func TestHandler_Register(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
