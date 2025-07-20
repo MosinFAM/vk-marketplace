@@ -12,6 +12,9 @@ type AdsFilter struct {
 	UserID    *string
 }
 
+// go install go.uber.org/mock/mockgen@latest
+//
+//go:generate mockgen -source=repository.go -destination=repo_mock.go -package=repository Repository
 type Repository interface {
 	CreateAd(ad models.Ad) (models.Ad, error)
 	ListAds(filter AdsFilter) ([]models.Ad, error)
