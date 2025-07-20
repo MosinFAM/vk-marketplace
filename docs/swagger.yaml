@@ -1,0 +1,240 @@
+basePath: /
+definitions:
+  models.Ad:
+    properties:
+      created_at:
+        example: "2025-07-19T12:34:56Z"
+        type: string
+      description:
+        example: Buy GTA6
+        type: string
+      id:
+        example: adcacsac123
+        type: string
+      image_url:
+        example: http://example.com/image.jpg
+        type: string
+      is_owner:
+        example: true
+        type: boolean
+      price:
+        example: 888
+        type: number
+      title:
+        example: Buy GTA6
+        type: string
+      user_id:
+        example: user123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  models.AuthRequest:
+    properties:
+      password:
+        example: secure123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        example: Invalid credentials
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      token:
+        example: your.jwt.token
+        type: string
+      user:
+        properties:
+          id:
+            type: string
+          username:
+            type: string
+        type: object
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API for a marketplace with user auth and ads
+  title: Marketplace API
+  version: "1.0"
+paths:
+  /ads:
+    get:
+      parameters:
+      - description: 'Sort by field: created_at or price'
+        in: query
+        name: sort_by
+        type: string
+      - description: asc or desc
+        in: query
+        name: sort_order
+        type: string
+      - description: Min price
+        in: query
+        name: min_price
+        type: number
+      - description: Max price
+        in: query
+        name: max_price
+        type: number
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Ad'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get list of ads with filters & pagination
+      tags:
+      - ads
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ad object
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Ad'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Ad'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new ad
+      tags:
+      - ads
+  /ads/{id}:
+    get:
+      parameters:
+      - description: Ad ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Ad'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a single ad by ID
+      tags:
+      - ads
+  /login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: username and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: username and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+schemes:
+- http
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
