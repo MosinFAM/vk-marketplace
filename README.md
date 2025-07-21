@@ -21,6 +21,7 @@ REST API условного маркетплейса, реализованног
 - Logrus (логирование)
 - GoMock + mockgen (моки в тестах)
 - Docker + Docker Compose
+- GitHub Actions (CI: тесты, линтер и сборка)
 
 ## Запуск контейнера
 
