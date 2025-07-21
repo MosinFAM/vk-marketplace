@@ -18,6 +18,8 @@ REST API условного маркетплейса, реализованног
 - Goose (миграции)
 - JWT (аутентификация)
 - Swagger (документация)
+- Logrus (логирование)
+- GoMock + mockgen (моки в тестах)
 - Docker + Docker Compose
 
 ## Запуск контейнера
@@ -32,7 +34,7 @@ Swagger-документация доступна по адресу
 
 #### `make build`
 
-Создаёт приложение в bin/marketplace.
+Собирает приложение в bin/marketplace.
 
 #### `make test`
 
