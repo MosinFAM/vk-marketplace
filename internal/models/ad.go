@@ -10,6 +10,6 @@ type Ad struct {
 	Price       float64   `json:"price" example:"888"`
 	CreatedAt   time.Time `json:"created_at" example:"2025-07-19T12:34:56Z"`
 	UserID      string    `json:"user_id" example:"user123"`
-	Username    string    `json:"username,omitempty" example:"john_doe"`
+	Username    string    `json:"username,omitempty" example:"sasha_fil"`
 	IsOwner     bool      `json:"is_owner,omitempty" example:"true"`
 }

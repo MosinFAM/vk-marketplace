@@ -27,7 +27,7 @@ definitions:
         example: user123
         type: string
       username:
-        example: john_doe
+        example: sasha_fil
         type: string
     type: object
   models.AuthRequest:
@@ -36,7 +36,7 @@ definitions:
         example: secure123
         type: string
       username:
-        example: john_doe
+        example: sasha_fil
         type: string
     type: object
   models.ErrorResponse:

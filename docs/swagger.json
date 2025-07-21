@@ -311,7 +311,7 @@
                 },
                 "username": {
                     "type": "string",
-                    "example": "john_doe"
+                    "example": "sasha_fil"
                 }
             }
         },
@@ -324,7 +324,7 @@
                 },
                 "username": {
                     "type": "string",
-                    "example": "john_doe"
+                    "example": "sasha_fil"
                 }
             }
         },

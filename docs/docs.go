@@ -314,7 +314,7 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string",
-                    "example": "john_doe"
+                    "example": "sasha_fil"
                 }
             }
         },
@@ -327,7 +327,7 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string",
-                    "example": "john_doe"
+                    "example": "sasha_fil"
                 }
             }
         },
